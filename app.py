@@ -108,7 +108,8 @@ try:
     df_master_raw['ITEM_NO'] = df_master_raw['ITEM_NO'].astype(str)
     df_master_raw['ITEM_NAME'] = df_master_raw['ITEM_NAME'].astype(str).fillna('Unknown')
     
-    df_master_clean = df_master_raw[['ITEM_NO', 'ITEM_NAME', 'GROUP_NAME1', 'GROUP_NAME2', 'GROUP_NAME3', 'GROUP_NAME4', 'VENDOR_NAME']].drop_duplicates(subset=['ITEM_NO'])
+    # Ambil kolom ON_CONSIGNMENT dari MASTER
+    df_master_clean = df_master_raw[['ITEM_NO', 'ITEM_NAME', 'GROUP_NAME1', 'GROUP_NAME2', 'GROUP_NAME3', 'GROUP_NAME4', 'VENDOR_NAME', 'ON_CONSIGNMENT']].drop_duplicates(subset=['ITEM_NO'])
 
     df_intel = pd.merge(df_master_clean, cons[['ITEM_NO', 'KATEGORI']], on='ITEM_NO', how='left')
     df_intel = pd.merge(df_intel, avg_s[['ITEM_NO', 'FSD', 'QTY']], on='ITEM_NO', how='left')
@@ -137,6 +138,9 @@ try:
         options = sorted([str(x) for x in df[col].unique().tolist() if str(x) != 'nan'])
         return st.sidebar.multiselect(label, options)
 
+    # Tambahan Filter Konsinyasi
+    f_consign = multi_filter("ON CONSIGNMENT", 'ON_CONSIGNMENT', df_final)
+    
     f_thrg = multi_filter("TIPE HARGA (Promo/Reguler)", 'TIPE_HARGA', df_final)
     f_type = multi_filter("FORM_TYPE", 'FORM_TYPE', df_final)
     f_tahun = multi_filter("TAHUN", 'TAHUN', df_final)
@@ -156,6 +160,7 @@ try:
     # Apply Filtering Logic
     df_f = df_final.copy()
     if search_item != "Semua Barang": df_f = df_f[df_f['ITEM_NAME'] == search_item]
+    if f_consign: df_f = df_f[df_f['ON_CONSIGNMENT'].isin(f_consign)] # Filter Konsinyasi
     if f_thrg: df_f = df_f[df_f['TIPE_HARGA'].isin(f_thrg)]
     if f_type: df_f = df_f[df_f['FORM_TYPE'].isin(f_type)]
     if f_tahun: df_f = df_f[df_f['TAHUN'].isin(f_tahun)]
@@ -169,6 +174,7 @@ try:
     if f_g4: df_f = df_f[df_f['GROUP_NAME4'].isin(f_g4)]
 
     df_s_f = df_stok_val.copy()
+    if f_consign: df_s_f = df_s_f[df_s_f['ON_CONSIGNMENT'].isin(f_consign)] # Filter Konsinyasi Stok
     if f_vend: df_s_f = df_s_f[df_s_f['VENDOR_NAME'].isin(f_vend)]
     if f_kat: df_s_f = df_s_f[df_s_f['KATEGORI'].isin(f_kat)]
     if f_fsd: df_s_f = df_s_f[df_s_f['FSD'].isin(f_fsd)]
