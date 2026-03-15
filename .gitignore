@@ -1,0 +1,4 @@
+KUNCI_AKSES.json
+api_parquet_cache/
+__pycache__/
+.env
